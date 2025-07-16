@@ -570,25 +570,19 @@ static InitFunction initFunction([]()
 				return;
 			}
 
-			if (mumble_allowExternalConnections->GetValue())
+			if (len == 12 && *(uint32_t*)data == 0)
 			{
-				// is this a Mumble ping?
-				if (len == 12 && *(uint32_t*)data == 0)
-				{
-					uint32_t ping[6];
-					memcpy(ping, data, len);
+				uint32_t ping[6];
+				memcpy(ping, data, len);
 
-					ping[0] = htonl((uint32_t)((PROTVER_MAJOR << 16) | (PROTVER_MINOR << 8) | (PROTVER_PATCH)));
-					ping[3] = htonl((uint32_t)Client_count());
-					ping[4] = htonl((uint32_t)getIntConf(MUMBLE_MAX_CLIENTS));
-					ping[5] = htonl((uint32_t)getIntConf(MAX_BANDWIDTH));
+				ping[0] = htonl((uint32_t)((PROTVER_MAJOR << 16) | (PROTVER_MINOR << 8) | (PROTVER_PATCH)));
+				ping[3] = htonl((uint32_t)Client_count());
+				ping[4] = htonl((uint32_t)getIntConf(MUMBLE_MAX_CLIENTS));
+				ping[5] = htonl((uint32_t)getIntConf(MAX_BANDWIDTH));
 
-					*intercepted = true;
-
-					interceptor->Send(address, ping, sizeof(ping));
-
-					return;
-				}
+				*intercepted = true;
+				interceptor->Send(address, ping, sizeof(ping));
+				return;
 			}
 
 			auto fromAddress = address.GetHostBytes();

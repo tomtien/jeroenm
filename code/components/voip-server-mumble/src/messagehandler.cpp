@@ -186,7 +186,15 @@ void Mh_handle_message(client_t *client, message_t *msg)
 			goto disconnect;
 		}
 		
-		if(!mumble_allowExternalConnections->GetValue())
+		/* Check if admin PW among tokens */
+		if (strlen(getStrConf(ADMIN_PASSPHRASE)) > 0 &&
+		    Client_token_match(client, getStrConf(ADMIN_PASSPHRASE))) {
+			client->isAdmin = true;
+			client->authenticated = true;
+			Log_info_client(client, "User provided admin password");
+		}
+
+		if(!mumble_allowExternalConnections->GetValue() && !client->authenticated)
 		{
 			char buf[64];
 			if (!client->os_version || !client->release || 
@@ -236,12 +244,7 @@ void Mh_handle_message(client_t *client, message_t *msg)
 		if (msg->payload.authenticate->tokens_size() > 0)
 			addTokens(client, msg);
 
-		/* Check if admin PW among tokens */
-		if (strlen(getStrConf(ADMIN_PASSPHRASE)) > 0 &&
-		    Client_token_match(client, getStrConf(ADMIN_PASSPHRASE))) {
-			client->isAdmin = true;
-			Log_info_client(client, "User provided admin password");
-		}
+
 
 		/* Setup UDP encryption */
 		CryptState_init(&client->cryptState);
